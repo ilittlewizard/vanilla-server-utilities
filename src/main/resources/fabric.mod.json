@@ -1,29 +1,29 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "vanilla-server-utilities",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Vanilla Server Utilities",
+  "description": "A mods that provides server useful utilities, such as /backup command and periodic auto-save with customizable options, while keeping your server \"vanilla\"",
   "authors": [
-    "Me!"
+    "iLittleWizard"
   ],
   "contact": {
     "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "sources": "https://github.com/ilittlewizard/vanilla-server-utilities"
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/vanilla-server-utilities/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "com.github.ilittlewizard.vsu.VsuMod"
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "vanilla-server-utilities.mixins.json"
   ],
 
   "depends": {
