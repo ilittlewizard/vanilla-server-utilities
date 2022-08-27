@@ -6,7 +6,6 @@
   "mixins": [
     "LevelStorageSessionAccessor",
     "MinecraftServerAccessor",
-    "SessionLockAccessor",
     "SessionLockInvoker"
   ],
   "client": [

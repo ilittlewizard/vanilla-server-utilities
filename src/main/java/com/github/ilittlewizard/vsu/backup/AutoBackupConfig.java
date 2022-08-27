@@ -1,78 +1,90 @@
 package com.github.ilittlewizard.vsu.backup;
 
+import com.github.ilittlewizard.vsu.AbstractVsuConfig;
 import com.github.ilittlewizard.vsu.VsuConfig;
-import com.github.ilittlewizard.vsu.backup.AutoBackupQueue;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class AutoBackupConfig extends VsuConfig {
-    private static final String NAME = "backup";
+public class AutoBackupConfig extends AbstractVsuConfig {
+    private static final String NAME = "autobackup";
+    private static AutoBackupConfig INSTANCE;
 
+
+    public static AutoBackupConfig getInstance() {
+        if(INSTANCE == null) {
+            INSTANCE = load(NAME, AutoBackupConfig.class, new AutoBackupConfig());
+        }
+        return INSTANCE;
+    }
+    private boolean autoBackupNotifyError = true;
+    private boolean autoBackupNotifyInfo = false;
+    private int autoBackupInterval = 60;
+    private int autoBackupQueueCapacity = 5;
+    private static final DateFormat BACKUP_DATE_FORMAT =
+            new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS");
     public AutoBackupConfig() {
         super(NAME);
     }
 
-    private static final AutoBackupConfig INSTANCE =
-            load(NAME, AutoBackupConfig.class, new AutoBackupConfig());
-
-    public static AutoBackupConfig getInstance() {
-        return INSTANCE;
+    /**
+     * Return whenever the OPs should receive errors from auto-backup
+     * @return whenever the OPs should receive errors from auto-backup
+     */
+    public boolean isAutoBackupNotifyError() {
+        return autoBackupNotifyError;
     }
 
-    private int backupInterval = 60;
-    private int backupQueueCapacity = 5;
-    private String backupDateTimeFormat = "yyyy-MM-dd_HH-mm-ss-SSS";
+    public void setAutoBackupNotifyError(boolean autoBackupNotifyError) {
+        this.autoBackupNotifyError = autoBackupNotifyError;
+        save();
+    }
 
-    private transient DateFormat dateTimeFormat = new SimpleDateFormat(backupDateTimeFormat);
+    /**
+     * Return whenever the OPs should receive infos from auto-backup
+     * @return whenever the OPs should receive infos from auto-backup
+     */
+    public boolean isAutoBackupNotifyInfo() {
+        return autoBackupNotifyInfo;
+    }
+
+    public void setAutoBackupNotifyInfo(boolean autoBackupNotifyInfo) {
+        this.autoBackupNotifyInfo = autoBackupNotifyInfo;
+        save();
+    }
 
     /**
      * @return The interval of auto-backup, in second(s)
      */
-    public int getBackupInterval() {
-        return backupInterval;
+    public int getAutoBackupInterval() {
+        return autoBackupInterval;
     }
 
     /**
-     * @param backupInterval The interval of auto-backup, in second(s)
+     * @param autoBackupInterval The interval of auto-backup, in second(s)
      */
-    public void setBackupInterval(int backupInterval) {
-        this.backupInterval = backupInterval;
+    public void setAutoBackupInterval(int autoBackupInterval) {
+        this.autoBackupInterval = autoBackupInterval;
         save();
     }
 
     /**
-     *
      * Return the length of the backup queue. <br>
-     * @see AutoBackupQueue
      *
      * @return The length of backup queue
+     * @see AutoBackupQueue
      */
-    public int getBackupQueueCapacity() {
-        return backupQueueCapacity;
+    public int getAutoBackupQueueCapacity() {
+        return autoBackupQueueCapacity;
     }
 
-    public void setBackupQueueCapacity(int backupQueueCapacity) {
-        this.backupQueueCapacity = backupQueueCapacity;
-        save();
-    }
-
-    /**
-     * Return the date time format of the backup's .zip file
-      * @return The date time format of the backup file, without ".zip" extension
-     */
-    public String getBackupDateTimeFormat() {
-        return backupDateTimeFormat;
-    }
-
-    public void setBackupDateTimeFormat(String backupDateTimeFormat) {
-        this.backupDateTimeFormat = backupDateTimeFormat;
-        this.dateTimeFormat = new SimpleDateFormat(backupDateTimeFormat);
+    public void setAutoBackupQueueCapacity(int autoBackupQueueCapacity) {
+        this.autoBackupQueueCapacity = autoBackupQueueCapacity;
         save();
     }
 
     public String formatCurrentTime() {
-        return dateTimeFormat.format(new Date());
+        return BACKUP_DATE_FORMAT.format(new Date());
     }
 }

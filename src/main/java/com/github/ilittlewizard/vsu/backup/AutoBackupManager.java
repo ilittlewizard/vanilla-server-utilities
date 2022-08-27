@@ -1,5 +1,7 @@
 package com.github.ilittlewizard.vsu.backup;
 
+import com.github.ilittlewizard.vsu.VsuConfig;
+import com.github.ilittlewizard.vsu.backup.callback.BackupCallback;
 import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
@@ -19,19 +21,26 @@ public class AutoBackupManager {
     private final ExecutorService ioThread = Executors.newSingleThreadScheduledExecutor();
     private final AtomicBoolean ioThreadStatus = new AtomicBoolean(false);
     private final MinecraftServer server;
+    private final AutoBackupQueue backupQueue = new AutoBackupQueue(
+            AutoBackupConfig.getInstance().getAutoBackupQueueCapacity());
 
     public AutoBackupManager(MinecraftServer server) {
         this.server = server;
     }
 
     private BackupCallback autoBackupCallback;
-    private int backupInterval = 60;
     private int timeElapsedMilliseconds = 0;
 
     public void startTickLoop() {
         ticker.scheduleAtFixedRate(() -> {
+            if(!VsuConfig.getInstance().isDoAutoBackup()) {
+                /* Reset timer */
+                timeElapsedMilliseconds = 0;
+                return;
+            }
+
             timeElapsedMilliseconds += TICKING_INTERVAL;
-            if(timeElapsedMilliseconds < backupInterval * 1000) {
+            if(timeElapsedMilliseconds < AutoBackupConfig.getInstance().getAutoBackupInterval() * 1000) {
                 /* Continue ticking */
                 return;
             }
@@ -44,21 +53,9 @@ public class AutoBackupManager {
             }
 
             timeElapsedMilliseconds = 0;
-            ioThread.submit(() -> backup(autoBackupCallback));
+            ioThread.submit(() -> backup(autoBackupCallback, false));
         }, TICKING_INTERVAL, TICKING_INTERVAL,
                 TimeUnit.MILLISECONDS);
-    }
-
-    public void stopTickLoop() {
-        ticker.shutdown();
-    }
-
-    public int getBackupInterval() {
-        return backupInterval;
-    }
-
-    public void setBackupInterval(int backupInterval) {
-        this.backupInterval = backupInterval;
     }
 
     public void setAutoBackupCallback(BackupCallback autoBackupCallback) {
@@ -73,12 +70,11 @@ public class AutoBackupManager {
         }
 
         timeElapsedMilliseconds = 0;
-        ioThread.submit(() -> backup(callback));
+        ioThread.submit(() -> backup(callback, true));
     }
-    private void backup(BackupCallback callback) {
+    private void backup(BackupCallback callback, boolean isTriggered) {
         ioThreadStatus.set(true);
-
-        setServerAutoSaving(false);
+;
         callback.onInfo("Saving Server ...");
         if(!server.saveAll(false, true, true)) {
             callback.onError("Failed to save world; Refer to server log for more details");
@@ -86,36 +82,44 @@ public class AutoBackupManager {
             return;
         }
 
-        callback.onInfo("Creating Backup ...");
-        String backupFileName = AutoBackupConfig.getInstance().formatCurrentTime() + ".zip";
-        try {
-            Path savePath = server.getSavePath(WorldSavePath.ROOT);
-            File backupFile = FabricLoader.getInstance().getGameDir()
-                    .resolve("backups/")
-                    .resolve(backupFileName)
-                    .toFile();
-            AutoBackupIO.makeParentDirectory(backupFile);
+        callback.onInfo(isTriggered ? "Creating Auto-Backup ..." : "Creating Backup ...");
 
+        String backupFileName = AutoBackupConfig.getInstance().formatCurrentTime() + ".zip";
+        Path savePath = server.getSavePath(WorldSavePath.ROOT);
+        Path backupPath = FabricLoader.getInstance().getGameDir()
+                .resolve("backups/");
+        if(isTriggered) {
+            backupPath = backupPath.resolve("manual");
+        }
+
+        File backupFile = backupPath
+                .resolve(backupFileName)
+                .toFile();
+        try {
+            AutoBackupIO.makeParentDirectories(backupFile);
             AutoBackupIO.closeSessionLock(server);
             AutoBackupIO.createBackup(savePath, backupFile);
             AutoBackupIO.createSessionLock(server);
+
+            if(!isTriggered) {
+                File oldBackup = backupQueue.enqueue(backupFile);
+                if(oldBackup != null && oldBackup.isFile()) {
+                    // If it cannot be deleted, then we will just leave it alone
+                    oldBackup.delete();
+                }
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to create backup", e);
-            callback.onError("Failed to create backup due to an unexpected IOException; " +
+            callback.onError("Failed to create backup due to an unexpected exception; " +
                     "Refer to server log for more detail");
             ioThreadStatus.set(false);
             return;
         }
 
-        setServerAutoSaving(true);
-        callback.onInfo("Backup created: " + backupFileName);
-        ioThreadStatus.set(false);
-    }
+        callback.onInfo("Backup created: /backups/" +
+                (isTriggered ? "manual/" : "") +
+                backupFileName);
 
-    private void setServerAutoSaving(boolean enabled) {
-        for (ServerWorld serverWorld : server.getWorlds()) {
-            if (serverWorld != null)
-                serverWorld.savingDisabled = !enabled;
-        }
+        ioThreadStatus.set(false);
     }
 }

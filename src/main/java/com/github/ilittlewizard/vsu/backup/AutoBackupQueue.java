@@ -51,6 +51,8 @@ public class AutoBackupQueue {
      * @param capacity The new capacity of the queue
      * @return The trimmed part of the old queue, empty if the queue is not trimmed
      */
+    @SuppressWarnings("unused")
+    @Deprecated
     public List<File> resize(int capacity) {
         this.capacity = capacity;
         if(capacity >= backups.size()) {

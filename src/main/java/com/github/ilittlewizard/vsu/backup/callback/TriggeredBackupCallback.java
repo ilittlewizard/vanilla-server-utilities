@@ -1,6 +1,5 @@
-package com.github.ilittlewizard.vsu.backup;
+package com.github.ilittlewizard.vsu.backup.callback;
 
-import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 

@@ -48,8 +48,8 @@ public class AutoBackupIO {
      * @param file The file to make its parent directory
      * @return true if its parent directory is successfully created
      */
-    public static boolean makeParentDirectory(File file) {
-        return file.getParentFile().mkdir();
+    public static boolean makeParentDirectories(File file) {
+        return file.getParentFile().mkdirs();
     }
     /**
      * Create a backup of a world
