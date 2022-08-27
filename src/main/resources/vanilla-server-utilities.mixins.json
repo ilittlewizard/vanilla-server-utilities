@@ -4,9 +4,12 @@
   "package": "com.github.ilittlewizard.vsu.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "LevelStorageSessionAccessor",
+    "MinecraftServerAccessor",
+    "SessionLockAccessor",
+    "SessionLockInvoker"
   ],
   "client": [
-
   ],
   "injectors": {
     "defaultRequire": 1

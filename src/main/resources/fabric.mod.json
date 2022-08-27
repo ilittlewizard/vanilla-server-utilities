@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "Vanilla Server Utilities",
-  "description": "A mods that provides server useful utilities, such as /backup command and periodic auto-save with customizable options, while keeping your server \"vanilla\"",
+  "description": "A mods that provides server useful utilities, such as periodic auto-save with customizable options, while keeping your server \"vanilla\"",
   "authors": [
     "iLittleWizard"
   ],
